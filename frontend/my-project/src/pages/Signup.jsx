@@ -31,7 +31,7 @@ export default function Signup() {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            navigate("/");
+            navigate("/login");
         } catch (error) {
             alert("Server error");
         }

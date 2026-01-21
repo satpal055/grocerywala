@@ -12,31 +12,59 @@ export function CartProvider({ children }) {
         }
     });
 
-    // 👉 Every cart update goes to localStorage
+    // 🔒 persist cart
     useEffect(() => {
         localStorage.setItem("cart", JSON.stringify(cart));
     }, [cart]);
 
+    // ✅ UPDATED addToCart (NO BREAKING CHANGE)
     const addToCart = (product) => {
         setCart((prevCart) => {
-            const exist = prevCart.find((p) => p.id === product.id);
+            const exist = prevCart.find(
+                (p) => p.id === product.id
+            );
+
+            // 👇 prices already calculated on Home
+            const originalPrice =
+                product.originalPrice ?? product.price;
+
+            const finalPrice =
+                product.finalPrice ?? product.price;
+
             if (exist) {
                 return prevCart.map((p) =>
-                    p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
+                    p.id === product.id
+                        ? { ...p, quantity: p.quantity + 1 }
+                        : p
                 );
             }
-            return [...prevCart, { ...product, quantity: 1 }];
+
+            return [
+                ...prevCart,
+                {
+                    ...product,
+                    originalPrice, // ✅ deleted price
+                    finalPrice,    // ✅ discounted price
+                    quantity: 1,
+                },
+            ];
         });
     };
 
-    const setCartItems = (newCart) => {
-        setCart(newCart);
-    };
-
-    const totalItems = cart.reduce((sum, p) => sum + p.quantity, 0);
+    const totalItems = cart.reduce(
+        (sum, p) => sum + (p.quantity || 0),
+        0
+    );
 
     return (
-        <CartContext.Provider value={{ cart, addToCart, setCart: setCartItems, totalItems }}>
+        <CartContext.Provider
+            value={{
+                cart,
+                setCart,
+                addToCart,
+                totalItems,
+            }}
+        >
             {children}
         </CartContext.Provider>
     );

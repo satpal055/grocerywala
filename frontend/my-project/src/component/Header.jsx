@@ -51,7 +51,7 @@ export default function Header() {
                             Home
                         </button>
                         <button
-                            onClick={() => navigate("/offer")}
+                            onClick={() => navigate("/offers")}
                             className="  px-4 py-2 roun "
                         >
                             Offer

@@ -1,40 +1,27 @@
 const express = require("express");
 const Product = require("../models/Product");
-const Order = require("../models/Order"); // ✅ add this
+const Order = require("../models/Order");
+const User = require("../models/User");
+const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-/* Dashboard Counts API */
-router.get("/counts", async (req, res) => {
+router.get("/counts", protect, async (req, res) => {
     try {
-        // Total products
-        const totalProducts = await Product.countDocuments();
-
-        // Total categories (distinct from Product)
+        const products = await Product.countDocuments();
         const categories = await Product.distinct("category");
-
-        // Total orders
         const orders = await Order.countDocuments();
+        const users = await User.countDocuments();
 
-        // Total items quantity from all orders
-        const allOrders = await Order.find();
-        let totalQuantity = 0;
-        allOrders.forEach(order => {
-            order.items.forEach(item => {
-                totalQuantity += item.quantity;
-            });
-        });
-
-        // Send response
-        res.json({
-            products: totalProducts,
+        return res.json({
+            products,
             categories: categories.length,
             orders,
-            totalQuantity
+            users,
         });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server Error" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Dashboard error" });
     }
 });
 
