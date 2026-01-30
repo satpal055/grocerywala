@@ -14,4 +14,7 @@ const productSchema = new mongoose.Schema({
     images: [String],
 });
 
-module.exports = mongoose.model("Product", productSchema);
+// ✅ SAFE EXPORT (OverwriteModelError FIX)
+module.exports =
+    mongoose.models.Product ||
+    mongoose.model("Product", productSchema);

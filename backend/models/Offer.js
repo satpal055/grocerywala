@@ -7,6 +7,7 @@ const offerSchema = new mongoose.Schema(
         minCart: { type: Number, default: 0 },
         categories: { type: [String], default: [] },
         banner: { type: String },
+        expiryDate: { type: Date },
     },
     { timestamps: true }
 );

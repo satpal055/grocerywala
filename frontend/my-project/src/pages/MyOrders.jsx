@@ -5,6 +5,28 @@ export default function MyOrders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const BASE_URL = "http://localhost:3000";
+
+
+    const getImageUrl = (item) => {
+        // 1️⃣ images array (admin uploaded)
+        if (item.images && item.images.length > 0) {
+            return item.images[0].startsWith("http")
+                ? item.images[0]
+                : `http://localhost:3000${item.images[0]}`;
+        }
+
+        // 2️⃣ thumbnail
+        if (item.thumbnail) {
+            return item.thumbnail.startsWith("http")
+                ? item.thumbnail
+                : `http://localhost:3000${item.thumbnail}`;
+        }
+
+        // 3️⃣ fallback
+        return "https://via.placeholder.com/80";
+    };
+
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -91,7 +113,8 @@ export default function MyOrders() {
                                     Total Amount
                                 </p>
                                 <p className="text-xl font-bold">
-                                    ₹{order.total}
+                                    ₹{Number(order.total).toFixed(2)}
+
                                 </p>
                             </div>
                         </div>
@@ -104,10 +127,12 @@ export default function MyOrders() {
                                     className="flex items-center gap-5 bg-gray-50 rounded-xl p-4"
                                 >
                                     <img
-                                        src={item.thumbnail}
+                                        src={getImageUrl(item)}
                                         alt={item.title}
                                         className="w-20 h-20 object-contain bg-white rounded-lg shadow"
                                     />
+
+
 
                                     <div className="flex-1">
                                         <p className="font-semibold text-lg">

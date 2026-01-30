@@ -1,15 +1,73 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
+
 import { CartContext } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
 const BASE_URL = "http://localhost:3000";
 
 export default function Cart() {
+
     const { cart, setCart } = useContext(CartContext);
     const navigate = useNavigate();
 
     const [offers, setOffers] = useState([]);
     const [selectedOffer, setSelectedOffer] = useState(null);
+
+    const mergeCarts = (localCart, dbCart) => {
+        const map = new Map();
+
+        localCart.forEach(item => {
+            map.set(item.id, { ...item });
+        });
+
+        dbCart.forEach(item => {
+            if (map.has(item.id)) {
+                map.get(item.id).quantity += item.quantity;
+            } else {
+                map.set(item.id, item);
+            }
+        });
+
+        return Array.from(map.values());
+    };
+
+
+    /* ---------------- FETCH CART FROM DB ---------------- */
+    // useEffect(() => {
+    //     const token = localStorage.getItem("token");
+    //     if (!token) return;
+
+    //     fetch(`${BASE_URL}/api/cart`, {
+    //         headers: {
+    //             Authorization: `Bearer ${token}`,
+    //         },
+    //     })
+    //         .then(res => res.json())
+    //         .then(async (dbItems) => {
+    //             // db cart → full product data merge
+    //             const fullItems = await Promise.all(
+    //                 dbItems.map(async (ci) => {
+    //                     const res = await fetch(
+    //                         `${BASE_URL}/api/products/${ci.productId}`
+    //                     );
+    //                     const product = await res.json();
+    //                     return {
+    //                         ...product,
+    //                         id: product._id,
+    //                         quantity: ci.quantity,
+    //                         originalPrice: product.price,
+    //                         finalPrice: product.price,
+    //                     };
+    //                 })
+    //             );
+    //             if (fullItems.length > 0) {
+    //                 setCart(prev => mergeCarts(prev, fullItems));
+    //             }
+
+
+    //         })
+    //         .catch(() => setCart([]));
+    // }, [setCart]);
 
     /* ---------------- FETCH OFFERS ---------------- */
     useEffect(() => {
@@ -19,18 +77,40 @@ export default function Cart() {
             .catch(() => { });
     }, []);
 
-    /* ---------------- OFFER LOGIC (SAME AS HOME) ---------------- */
-    const getOfferForItem = (item) => {
-        if (!selectedOffer) return null;
-        if (!Array.isArray(selectedOffer.categories)) return null;
-        return selectedOffer.categories.includes(item.category)
-            ? selectedOffer
-            : null;
+    /* ---------------- IMAGE HELPER ---------------- */
+    const getCartImage = (item) => {
+        if (item.images && item.images.length > 0) {
+            return `${BASE_URL}${item.images[0]}`;
+        }
+        if (item.thumbnail) {
+            return item.thumbnail.startsWith("/uploads")
+                ? `${BASE_URL}${item.thumbnail}`
+                : item.thumbnail;
+        }
+        return "https://via.placeholder.com/80";
     };
 
-    const getDiscountedPrice = (price, discount) => {
-        if (!discount) return price;
-        return Math.round(price - (price * discount) / 100);
+    /* ---------------- DB HELPERS ---------------- */
+    const updateDBCart = async (productId, quantity) => {
+        await fetch(`${BASE_URL}/api/cart/add`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({ productId, quantity }),
+        });
+    };
+
+    const removeFromDBCart = async (productId) => {
+        await fetch(`${BASE_URL}/api/cart/remove`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({ productId }),
+        });
     };
 
     /* ---------------- CART ACTIONS ---------------- */
@@ -42,29 +122,47 @@ export default function Cart() {
                     : item
             )
         );
+        // updateDBCart(id, 1);
     };
 
     const decrement = (id) => {
         setCart(prev =>
-            prev.map(item =>
-                item.id === id
-                    ? { ...item, quantity: Math.max(1, item.quantity - 1) }
-                    : item
-            )
+            prev
+                .map(item =>
+                    item.id === id
+                        ? { ...item, quantity: item.quantity - 1 }
+                        : item
+                )
+                .filter(item => item.quantity > 0)
         );
+        // updateDBCart(id, -1);
     };
 
-    const removeItem = (id) => {
+    const removeItem = async (id) => {
         setCart(prev => prev.filter(item => item.id !== id));
+        // await removeFromDBCart(id);
     };
+
+    /* ---------------- OFFER LOGIC ---------------- */
+    const getOfferForItem = (item) => {
+        if (!selectedOffer) return null;
+        if (!Array.isArray(selectedOffer.categories)) return null;
+        return selectedOffer.categories.includes(item.category)
+            ? selectedOffer
+            : null;
+    };
+
+    const getDiscountedPrice = (price, discount) =>
+        discount ? Math.round(price - (price * discount) / 100) : price;
 
     /* ---------------- PRICE CALC ---------------- */
-    const totalMRP = cart.reduce(
-        (sum, item) =>
-            sum + (item.finalPrice ?? item.price) * item.quantity,
-        0
-    );
-
+    const totalMRP = cart.reduce((sum, item) => {
+        const offer = getOfferForItem(item);
+        const final = offer
+            ? getDiscountedPrice(item.price, offer.discount)
+            : item.price;
+        return sum + final * item.quantity;
+    }, 0);
 
     const deliveryFee = cart.length ? 40 : 0;
     const totalPayable = totalMRP + deliveryFee;
@@ -89,7 +187,6 @@ export default function Cart() {
         if (res.ok) {
             alert("Order placed successfully!");
             setCart([]);
-            localStorage.removeItem("cart");
             navigate("/myorders");
         } else {
             alert("Order failed");
@@ -111,12 +208,13 @@ export default function Cart() {
         );
     }
 
+    /* ---------------- UI ---------------- */
     return (
         <div className="max-w-7xl mx-auto p-6">
             <h2 className="text-2xl font-bold mb-6">Your Cart</h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* ---------------- CART ITEMS ---------------- */}
+                {/* CART ITEMS */}
                 <div className="lg:col-span-2 space-y-4">
                     {cart.map(item => {
                         const offer = getOfferForItem(item);
@@ -131,29 +229,24 @@ export default function Cart() {
                             >
                                 <div className="flex gap-4 items-center">
                                     <img
-                                        src={item.thumbnail}
+                                        src={getCartImage(item)}
                                         alt={item.title}
                                         className="w-16 h-16 object-contain"
                                     />
 
                                     <div>
-                                        <p className="font-semibold">
-                                            {item.title}
-                                        </p>
+                                        <p className="font-semibold">{item.title}</p>
 
-                                        {/* PRICE */}
                                         <div className="flex gap-2 items-center">
-                                            {item.originalPrice && (
+                                            {offer && (
                                                 <span className="line-through text-gray-400 text-sm">
-                                                    ₹{item.originalPrice}
+                                                    ₹{item.price}
                                                 </span>
                                             )}
-
                                             <span className="text-green-600 font-bold">
-                                                ₹{item.finalPrice ?? item.price}
+                                                ₹{finalPrice}
                                             </span>
                                         </div>
-
 
                                         <p className="text-sm text-gray-500">
                                             Item Total: ₹
@@ -163,19 +256,9 @@ export default function Cart() {
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => decrement(item.id)}
-                                        className="border px-2 rounded"
-                                    >
-                                        -
-                                    </button>
+                                    <button onClick={() => decrement(item.id)}>-</button>
                                     <span>{item.quantity}</span>
-                                    <button
-                                        onClick={() => increment(item.id)}
-                                        className="border px-2 rounded"
-                                    >
-                                        +
-                                    </button>
+                                    <button onClick={() => increment(item.id)}>+</button>
                                     <button
                                         onClick={() => removeItem(item.id)}
                                         className="ml-3 text-red-500 text-sm"
@@ -188,7 +271,7 @@ export default function Cart() {
                     })}
                 </div>
 
-                {/* ---------------- PRICE DETAILS ---------------- */}
+                {/* PRICE DETAILS */}
                 <div className="bg-white p-6 rounded-lg shadow h-fit">
                     <h3 className="font-bold mb-4">Price Details</h3>
 
@@ -209,7 +292,7 @@ export default function Cart() {
                         <span>₹{totalPayable.toFixed(2)}</span>
                     </div>
 
-                    {/* APPLY OFFER */}
+                    {/* OFFERS */}
                     <select
                         className="w-full border p-2 rounded mb-4"
                         value={selectedOffer?._id || ""}

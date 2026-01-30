@@ -1,3 +1,4 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 require("dotenv").config();
 
 const express = require("express");
@@ -12,6 +13,9 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const sliderRoutes = require("./routes/slider");
 const offerRoutes = require("./routes/offerRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
+const cartRoutes = require('./routes/cartRoutes')
+// const importDummyProducts = require("./utils/importDummyProducts");
 
 const app = express();
 const PORT = 3000;
@@ -39,13 +43,15 @@ app.use("/uploads", express.static("uploads"));
 /* ---- DB ---- */
 connectDB();
 
-/* ---- ROUTES (✅ FIXED) ---- */
-app.use("/api/products", productRoutes);          // ✅ FIX
+/* ---- ROUTES (✅) ---- */
+app.use("/api/products", productRoutes);
 app.use("/api/slider", sliderRoutes);
 app.use("/api/admin/users", adminUsersRoute);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/dashboard", dashboardRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/cart", cartRoutes);
 
 /* ---- Server ---- */
 app.listen(PORT, () => {

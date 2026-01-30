@@ -1,6 +1,40 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
+/* ================= GUEST → USER CART MERGE ================= */
+const mergeGuestCartIntoUser = (userId) => {
+    const guestCart =
+        JSON.parse(localStorage.getItem("cart_guest")) || [];
+
+    const userCartKey = `cart_${userId}`;
+    const userCart =
+        JSON.parse(localStorage.getItem(userCartKey)) || [];
+
+    const map = new Map();
+
+    // existing user cart
+    userCart.forEach(item => {
+        map.set(item.id, { ...item });
+    });
+
+    // merge guest cart
+    guestCart.forEach(item => {
+        if (map.has(item.id)) {
+            map.get(item.id).quantity += item.quantity;
+        } else {
+            map.set(item.id, item);
+        }
+    });
+
+    localStorage.setItem(
+        userCartKey,
+        JSON.stringify(Array.from(map.values()))
+    );
+
+    // cleanup guest cart
+    localStorage.removeItem("cart_guest");
+};
+
 export default function Login() {
     const navigate = useNavigate();
 
@@ -27,9 +61,12 @@ export default function Login() {
                 return;
             }
 
-            // ✅ SAVE TOKEN
+            // ✅ SAVE AUTH
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
+
+            // 🔥 MERGE GUEST CART INTO USER CART
+            mergeGuestCartIntoUser(data.user.id);
 
             alert("Login successful");
             navigate("/");
@@ -44,7 +81,12 @@ export default function Login() {
             <div className="bg-white p-6 rounded-lg shadow w-80">
                 <h2 className="text-xl font-bold mb-4">Login</h2>
 
-                <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleLogin();
+                    }}
+                >
                     <input
                         type="email"
                         placeholder="Email"
@@ -61,6 +103,15 @@ export default function Login() {
                         className="w-full border p-2 mb-4 rounded"
                     />
 
+                    <p className="text-sm my-2 text-right">
+                        <Link
+                            to="/forgot-password"
+                            className="text-blue-600"
+                        >
+                            Forgot Password?
+                        </Link>
+                    </p>
+
                     <button
                         type="submit"
                         className="w-full bg-green-600 text-white py-2 rounded"
@@ -71,7 +122,10 @@ export default function Login() {
 
                 <p className="text-sm mt-3 text-center">
                     New user?{" "}
-                    <Link to="/signup" className="text-green-600 font-semibold">
+                    <Link
+                        to="/signup"
+                        className="text-green-600 font-semibold"
+                    >
                         Signup
                     </Link>
                 </p>

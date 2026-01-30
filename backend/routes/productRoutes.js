@@ -3,9 +3,8 @@ const Product = require("../models/Product");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const slugify = require("slugify");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
-
-// const { protect, authorizeRoles } = require("../middleware/auth");
 
 // ---------------- MULTER SETUP ----------------
 const storage = multer.diskStorage({
@@ -13,9 +12,11 @@ const storage = multer.diskStorage({
         cb(null, "uploads/products");
     },
     filename: function (req, file, cb) {
-        const uniqueSuffix =
-            Date.now() + "-" + Math.round(Math.random() * 1e9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        const title = req.body.title || "product";
+        const slug = slugify(title, { lower: true, strict: true });
+        const ext = path.extname(file.originalname);
+        const unique = Date.now();
+        cb(null, `${slug}-${unique}${ext}`);
     },
 });
 
@@ -51,7 +52,7 @@ router.post(
     "/",
     protect,
     authorizeRoles("superadmin", "product"),
-    upload.single("thumbnail"),
+    upload.array("images", 5),
     async (req, res) => {
         try {
             const {
@@ -61,6 +62,11 @@ router.post(
                 category,
                 discountPercentage,
                 rating,
+
+                // 🔥 ADDED (SAFE)
+                brand,
+                description,
+                thumbnail,
             } = req.body;
 
             if (!title || !price) {
@@ -69,19 +75,28 @@ router.post(
                     .json({ message: "Title and price required" });
             }
 
-            const thumbnail = req.file
-                ? `/uploads/products/${req.file.filename}`
-                : "";
+            const images = req.files
+                ? req.files.map(
+                    (file) => `/uploads/products/${file.filename}`
+                )
+                : [];
 
             const newProduct = new Product({
                 title,
                 price: Number(price),
                 stock: Number(stock) || 0,
                 category,
+
                 discountPercentage:
                     Number(discountPercentage) || 0,
                 rating: Number(rating) || 0,
-                thumbnail,
+
+                // 🔥 IMPORTANT
+                brand,
+                description,
+                thumbnail: thumbnail || images[0],
+
+                images,
             });
 
             const savedProduct = await newProduct.save();
@@ -98,7 +113,7 @@ router.put(
     "/:id",
     protect,
     authorizeRoles("superadmin", "product"),
-    upload.single("thumbnail"),
+    upload.array("images", 5),
     async (req, res) => {
         try {
             const product = await Product.findById(req.params.id);
@@ -110,26 +125,39 @@ router.put(
 
             if (req.body.title !== undefined)
                 product.title = req.body.title;
+
             if (req.body.price !== undefined)
                 product.price = Number(req.body.price);
+
             if (req.body.stock !== undefined)
                 product.stock = Number(req.body.stock);
+
             if (req.body.category !== undefined)
                 product.category = req.body.category;
 
-            if (req.body.discountPercentage !== undefined) {
+            if (req.body.discountPercentage !== undefined)
                 product.discountPercentage =
                     Number(req.body.discountPercentage) || 0;
-            }
 
-            if (req.body.rating !== undefined) {
+            if (req.body.rating !== undefined)
                 product.rating = Number(req.body.rating) || 0;
-            }
 
-            if (req.file) {
-                product.thumbnail = `/uploads/products/${req.file.filename}`;
-            }
+            // 🔥 IMPORTANT (WAS MISSING EARLIER)
+            if (req.body.brand !== undefined)
+                product.brand = req.body.brand;
 
+            if (req.body.description !== undefined)
+                product.description = req.body.description;
+
+            if (req.body.thumbnail !== undefined)
+                product.thumbnail = req.body.thumbnail;
+
+            if (req.files && req.files.length > 0) {
+                product.images = req.files.map(
+                    (file) =>
+                        `/uploads/products/${file.filename}`
+                );
+            }
 
             const updatedProduct = await product.save();
             res.json(updatedProduct);
@@ -139,6 +167,7 @@ router.put(
         }
     }
 );
+
 // ---------------- UPDATE STOCK (INVENTORY / SUPERADMIN) ----------------
 router.put(
     "/:id/stock",

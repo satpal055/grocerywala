@@ -8,6 +8,15 @@ const userSchema = new mongoose.Schema(
 
         password: { type: String, required: true },
 
+        // 🔐 FORGOT PASSWORD (⬅️ YAHI ADD KARNA HAI)
+        resetToken: {
+            type: String,
+        },
+
+        resetTokenExpiry: {
+            type: Date,
+        },
+
         // 🔐 ROLE SYSTEM
         role: {
             type: String,
@@ -21,14 +30,14 @@ const userSchema = new mongoose.Schema(
             default: "user",
         },
 
-        // 🟢 ACTIVE / INACTIVE (for Deactivate button)
+        // 🟢 ACTIVE / INACTIVE
         status: {
             type: String,
             enum: ["active", "inactive"],
             default: "active",
         },
 
-        // (optional legacy flag – can keep)
+        // (optional legacy flag)
         isAdmin: {
             type: Boolean,
             default: false,
