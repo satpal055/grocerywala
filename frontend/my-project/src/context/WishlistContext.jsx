@@ -2,7 +2,10 @@ import { createContext, useEffect, useState } from "react";
 
 export const WishlistContext = createContext();
 
-const API = "http://localhost:3000/api/wishlist";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+
+const API = `${BASE_URL}/api/wishlist`;
 
 export function WishlistProvider({ children }) {
     const [wishlist, setWishlist] = useState([]);

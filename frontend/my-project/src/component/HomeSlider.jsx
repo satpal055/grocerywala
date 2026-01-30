@@ -4,12 +4,15 @@ import axios from "axios";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { Autoplay } from "swiper";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 
 export default function HomeSlider() {
     const [slides, setSlides] = useState([]);
 
+
     useEffect(() => {
-        axios.get("http://localhost:3000/api/slider")
+        axios.get(`${BASE_URL}/api/slider`)
             .then(res => setSlides(res.data))
             .catch(err => console.error(err));
     }, []);
@@ -23,7 +26,7 @@ export default function HomeSlider() {
         >
             {slides.map(slide => (
                 <SwiperSlide key={slide._id}>
-                    <img src={`http://localhost:3000${slide.imageUrl}`} alt={slide.title} style={{ width: '100%' }} />
+                    <img src={`${BASE_URL}${slide.imageUrl}`} alt={slide.title} style={{ width: '100%' }} />
                 </SwiperSlide>
             ))}
         </Swiper>

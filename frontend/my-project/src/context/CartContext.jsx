@@ -1,6 +1,8 @@
 import { createContext, useState, useEffect, useMemo } from "react";
 
 export const CartContext = createContext();
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 
 /* ================= USER HELPER ================= */
 const getUserId = () => {
@@ -146,7 +148,7 @@ export function CartProvider({ children }) {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        fetch("http://localhost:3000/api/cart/sync", {
+        fetch(`${BASE_URL}/api/cart/sync`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

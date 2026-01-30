@@ -2,7 +2,8 @@ import React, { useContext } from "react";
 import { WishlistContext } from "../context/WishlistContext";
 import { useNavigate } from "react-router-dom";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 
 export default function Wishlist() {
     const { wishlist, removeFromWishlist } = useContext(WishlistContext);

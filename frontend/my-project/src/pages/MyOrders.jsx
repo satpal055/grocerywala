@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 
 export default function MyOrders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const BASE_URL = "http://localhost:3000";
+
 
 
     const getImageUrl = (item) => {
@@ -13,14 +15,14 @@ export default function MyOrders() {
         if (item.images && item.images.length > 0) {
             return item.images[0].startsWith("http")
                 ? item.images[0]
-                : `http://localhost:3000${item.images[0]}`;
+                : `${BASE_URL}${item.images[0]}`;
         }
 
         // 2️⃣ thumbnail
         if (item.thumbnail) {
             return item.thumbnail.startsWith("http")
                 ? item.thumbnail
-                : `http://localhost:3000${item.thumbnail}`;
+                : `${BASE_URL}${item.thumbnail}`;
         }
 
         // 3️⃣ fallback
@@ -36,7 +38,7 @@ export default function MyOrders() {
             return;
         }
 
-        fetch("http://localhost:3000/api/orders/my", {
+        fetch(`${BASE_URL}/api/orders/my`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
             },

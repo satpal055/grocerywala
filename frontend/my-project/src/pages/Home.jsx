@@ -14,7 +14,8 @@ export default function Home() {
     const [offers, setOffers] = useState([]);
     const [showLoginPopup, setShowLoginPopup] = useState(false);
 
-    const BASE_URL = "http://localhost:3000";
+    const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 
 
     const { cart, addToCart, increment, decrement } = useContext(CartContext);
@@ -29,7 +30,7 @@ export default function Home() {
         if (!token) return;
 
         try {
-            await fetch("http://localhost:3000/api/cart/add", {
+            await fetch(`${BASE_URL}/api/cart/add`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -48,7 +49,7 @@ export default function Home() {
 
     /* ================= SLIDER ================= */
     useEffect(() => {
-        fetch("http://localhost:3000/api/slider")
+        fetch(`${BASE_URL}/api/slider`)
             .then(res => res.json())
             .then(setSliders)
             .catch(console.error);
@@ -64,7 +65,7 @@ export default function Home() {
 
     /* ================= OFFERS ================= */
     useEffect(() => {
-        fetch("http://localhost:3000/api/offers")
+        fetch(`${BASE_URL}/api/offers`)
             .then(res => res.json())
             .then(data => Array.isArray(data) && setOffers(data))
             .catch(console.error);
@@ -72,7 +73,7 @@ export default function Home() {
 
     /* ================= PRODUCTS ================= */
     useEffect(() => {
-        fetch("http://localhost:3000/api/products")
+        fetch(`${BASE_URL}/api/products`)
             .then(res => res.json())
             .then(data => {
                 setProducts(data);
@@ -122,7 +123,7 @@ export default function Home() {
                     {sliders.map(slide => (
                         <img
                             key={slide._id}
-                            src={`http://localhost:3000${slide.imageUrl}`}
+                            src={`${BASE_URL}${slide.imageUrl}`}
                             alt={slide.title}
                             className="w-full h-60 object-cover flex-shrink-0"
                         />
@@ -157,7 +158,7 @@ export default function Home() {
                             >
                                 {offer.banner && (
                                     <img
-                                        src={`http://localhost:3000${offer.banner}`}
+                                        src={`${BASE_URL}${offer.banner}`}
                                         alt={offer.title}
                                         className="h-40 w-full object-cover rounded-t-xl"
                                     />

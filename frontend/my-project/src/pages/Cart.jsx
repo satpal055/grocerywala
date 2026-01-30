@@ -3,7 +3,8 @@ import React, { useEffect, useState, useContext, useRef } from "react";
 import { CartContext } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 
 export default function Cart() {
 

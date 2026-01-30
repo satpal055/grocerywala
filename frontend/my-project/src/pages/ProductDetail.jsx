@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -8,7 +10,7 @@ export default function ProductDetail() {
     const { cart, addToCart, increment, decrement } = useContext(CartContext);
     const [activeImage, setActiveImage] = useState("");
 
-    const BASE_URL = "http://localhost:3000";
+
     const [product, setProduct] = useState(null);
 
     useEffect(() => {
