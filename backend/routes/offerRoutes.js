@@ -3,7 +3,7 @@ const router = express.Router();
 const Offer = require("../models/Offer");
 const multer = require("multer");
 const path = require("path");
-const Product = require("../models/Product");
+const Product = require("../models/product");
 
 /* ---- MULTER ---- */
 const storage = multer.diskStorage({
