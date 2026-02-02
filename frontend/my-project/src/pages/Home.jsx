@@ -3,7 +3,7 @@ import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { useNavigate } from "react-router-dom";
 import LoginPopup from "../component/LoginPopup";
-
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export default function Home() {
     const [products, setProducts] = useState([]);
@@ -14,7 +14,7 @@ export default function Home() {
     const [offers, setOffers] = useState([]);
     const [showLoginPopup, setShowLoginPopup] = useState(false);
 
-    const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 
 
 
