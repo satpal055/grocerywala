@@ -36,4 +36,40 @@ router.get("/", async (req, res) => {
     }
 });
 
+// Update slider title
+router.put("/:id", async (req, res) => {
+    try {
+        const slider = await Slider.findById(req.params.id);
+
+        if (!slider) {
+            return res.status(404).json({ message: "Slider not found" });
+        }
+
+        slider.title = req.body.title || slider.title;
+        await slider.save();
+
+        res.json(slider);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete slider
+router.delete("/:id", async (req, res) => {
+    try {
+        const slider = await Slider.findById(req.params.id);
+
+        if (!slider) {
+            return res.status(404).json({ message: "Slider not found" });
+        }
+
+        await slider.deleteOne();
+        res.json({ message: "Slider deleted" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+
 module.exports = router;
