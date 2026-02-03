@@ -122,7 +122,7 @@ export default function SliderUpload() {
                 </button>
             </div>
             {/* -------- SLIDER LIST -------- */}
-            <div className="max-w-5xl mx-auto mt-10">
+            <div className="max-w-5xl mx-auto my-10">
                 <h3 className="text-xl font-bold mb-4">All Sliders</h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

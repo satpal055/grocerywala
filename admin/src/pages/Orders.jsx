@@ -72,7 +72,7 @@ export default function Orders() {
                             </div>
 
                             <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
-                                ₹{order.total}
+                                ₹{Number(order.total).toFixed(2)}
                             </span>
                         </div>
 
