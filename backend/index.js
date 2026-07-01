@@ -18,7 +18,7 @@ const cartRoutes = require('./routes/cartRoutes')
 // const importDummyProducts = require("./utils/importDummyProducts");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 /* ---- Ensure upload folders ---- */
 const folders = [
@@ -34,7 +34,15 @@ folders.forEach((dir) => {
 
 /* ---- Middleware ---- */
 app.use(cors());
-app.use(express.json());
+app.use(
+    cors({
+        origin: [
+            "https://grocerywala.vercel.app",
+            "https://YOUR-ADMIN.vercel.app"
+        ],
+        credentials: true,
+    })
+);
 
 app.use("/api/offers", offerRoutes);
 /* ---- Static ---- */
@@ -52,6 +60,9 @@ app.use("/api/admin/dashboard", dashboardRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
+app.get("/", (req, res) => {
+    res.send("Backend Running Successfully");
+});
 
 /* ---- Server ---- */
 app.listen(PORT, () => {
