@@ -25,13 +25,26 @@ const upload = multer({ storage });
 // ---------------- GET ALL PRODUCTS (PUBLIC) ----------------
 router.get("/", async (req, res) => {
     try {
+        const mongoose = require("mongoose");
+
+        const dbName = mongoose.connection.name;
+        const collections = await mongoose.connection.db
+            .listCollections()
+            .toArray();
+
         const products = await Product.find();
-        res.json(products);
+
+        res.json({
+            database: dbName,
+            collections: collections.map(c => c.name),
+            totalProducts: products.length,
+            products
+        });
     } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
+        console.error(error);
+        res.status(500).json({ message: error.message });
     }
 });
-
 // ---------------- GET SINGLE PRODUCT (PUBLIC) ----------------
 router.get("/:id", async (req, res) => {
     try {
